@@ -4,33 +4,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
     android:background="@color/black"
-    >
+    tools:context=".VictoryActivity">
 
-    <EditText
-        android:id="@+id/main_EDT_num_of_contacts"
+    <TextView
+        android:id="@+id/victory_TXT_victory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="Please Enter Number Of Contacts"
-        android:background="@android:color/transparent"
+        android:text="Victory"
         android:textColor="@color/white"
-        android:inputType="number"
+        android:textSize="100dp"
         android:layout_centerInParent="true"
-        >
+        />
 
-    </EditText>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/main_BTN_login"
+    <TextView
+        android:layout_below="@id/victory_TXT_victory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="You entered the app"
+        android:textColor="@color/white"
+        android:textSize="30dp"
         android:layout_centerInParent="true"
-        android:layout_below="@id/main_EDT_num_of_contacts"
-        android:text="Login"
-        android:textColor="@color/white">
-
-    </com.google.android.material.button.MaterialButton>
+        />
 
 
 </RelativeLayout>
