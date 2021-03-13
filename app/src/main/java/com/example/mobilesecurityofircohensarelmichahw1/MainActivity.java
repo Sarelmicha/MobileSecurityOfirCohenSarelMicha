@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
 
+import java.security.Permission;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -118,7 +119,7 @@ public class MainActivity extends Activity_Base {
 
     private void checkPermission() {
 
-        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) &&
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) ||
                 (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
         ) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_CONTACTS, Manifest.permission.RECORD_AUDIO
@@ -129,15 +130,18 @@ public class MainActivity extends Activity_Base {
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
+
         switch (requestCode) {
             case REQUEST_CODE: {
-
-                if (grantResults.length > 0
-                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    getAmplitudeFromMicrophone(this);
-                } else {
-                    checkPermission();
+                for (int i = 0; i < grantResults.length; i++) {
+                    if (grantResults.length == 0 ||
+                             grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                        checkPermission();
+                        return;
+                    }
                 }
+                getAmplitudeFromMicrophone(this);
+
             }
         }
     }
