@@ -93,6 +93,7 @@ public class MainActivity extends Activity_Base {
                         firstStep = false;
                     }
                     stepCounter = event.values[0] - initialStepCounter;
+
                 }
             }
 
@@ -125,6 +126,9 @@ public class MainActivity extends Activity_Base {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_CONTACTS, Manifest.permission.RECORD_AUDIO
             }, REQUEST_CODE);
         }
+        else {
+            getAmplitudeFromMicrophone(this);
+        }
     }
 
     @Override
@@ -137,7 +141,6 @@ public class MainActivity extends Activity_Base {
                     if (grantResults.length == 0 ||
                              grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                         checkPermission();
-                        return;
                     }
                 }
                 getAmplitudeFromMicrophone(this);
@@ -181,7 +184,6 @@ public class MainActivity extends Activity_Base {
         ContentResolver cr = getContentResolver();
         Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI,
                 null, null, null, null);
-        System.out.println(cursor.getCount());
         return cursor.getCount();
     }
 
@@ -206,7 +208,6 @@ public class MainActivity extends Activity_Base {
                     ar.stop();
                     recorder = false;
                     isNoisy = true;
-
                 }
 
             }
