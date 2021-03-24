@@ -48,6 +48,7 @@ public class MainActivity extends Activity_Base {
     private float stepCounter = 0;
     private float initialStepCounter = 0;
     private boolean firstStep = true;
+    private boolean isMicrophoneListening = false;
     private Sensor stepCounterSensor;
     private SensorManager sensorManager;
     private SensorEventListener sensorEventListener;
@@ -85,7 +86,6 @@ public class MainActivity extends Activity_Base {
 
         initSensorsListeners();
         initClickListeners();
-
     }
 
     private void initSensorsListeners() {
@@ -100,7 +100,6 @@ public class MainActivity extends Activity_Base {
                         firstStep = false;
                     }
                     stepCounter = event.values[0] - initialStepCounter;
-
                 }
             }
 
@@ -154,7 +153,7 @@ public class MainActivity extends Activity_Base {
                     }
                 }
 
-                getAmplitudeFromMicrophone(this);
+                isMicrophoneListening = true;
                 tryLogin();
 
 
@@ -167,6 +166,7 @@ public class MainActivity extends Activity_Base {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == MANUALLY_CONTACTS_PERMISSION_REQUEST_CODE) {
+            isMicrophoneListening = true;
             tryLogin();
         }
     }
@@ -209,6 +209,10 @@ public class MainActivity extends Activity_Base {
         if (!isGranted) {
             requestPermission();
             return;
+        }
+        if(!isMicrophoneListening){
+            isMicrophoneListening = true;
+            getAmplitudeFromMicrophone(this);
         }
 
         if (main_EDT_num_of_contacts.getText().toString().isEmpty()) {
