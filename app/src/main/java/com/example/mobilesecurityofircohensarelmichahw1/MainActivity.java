@@ -1,5 +1,7 @@
 package com.example.mobilesecurityofircohensarelmichahw1;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -8,6 +10,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -18,8 +21,10 @@ import android.hardware.SensorManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -33,10 +38,11 @@ import java.util.TimerTask;
 
 public class MainActivity extends Activity_Base {
 
-    //finals
+    // Finals
     private final float MAX_STEPS = 5;
     private final float MAX_NOISE_VALUE = 28000;
     private final int REQUEST_CODE = 123;
+    private final int MANUALLY_CONTACTS_PERMISSION_REQUEST_CODE = 124;
 
     // Variables for step counter sensor.
     private float stepCounter = 0;
@@ -45,6 +51,7 @@ public class MainActivity extends Activity_Base {
     private Sensor stepCounterSensor;
     private SensorManager sensorManager;
     private SensorEventListener sensorEventListener;
+
 
     private boolean isNoisy = false;
     private Timer timer;
@@ -61,7 +68,7 @@ public class MainActivity extends Activity_Base {
         findViews();
         initSensors();
         initListeners();
-        checkPermission();
+        tryLogin();
     }
 
     private void initSensors() {
@@ -118,39 +125,91 @@ public class MainActivity extends Activity_Base {
         );
     }
 
-    private void checkPermission() {
+    private boolean checkPermission() {
 
-        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) ||
-                (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) &&
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
         ) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_CONTACTS, Manifest.permission.RECORD_AUDIO
-            }, REQUEST_CODE);
+            return true;
         }
-        else {
-            getAmplitudeFromMicrophone(this);
-        }
+        return false;
+    }
+
+    private void requestPermission() {
+        ActivityCompat.requestPermissions(MainActivity.this,
+                new String[]{Manifest.permission.READ_CONTACTS, Manifest.permission.RECORD_AUDIO
+        }, REQUEST_CODE);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
-
         switch (requestCode) {
             case REQUEST_CODE: {
                 for (int i = 0; i < grantResults.length; i++) {
                     if (grantResults.length == 0 ||
-                             grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                        checkPermission();
+                            grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissionWithRationaleCheck();
+                        return;
                     }
                 }
+
                 getAmplitudeFromMicrophone(this);
+                tryLogin();
+
 
             }
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == MANUALLY_CONTACTS_PERMISSION_REQUEST_CODE) {
+            tryLogin();
+        }
+    }
+
+    private void requestPermissionWithRationaleCheck() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS) ||
+                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
+            // Show user description for what we need the permission
+           requestPermission();
+        } else {
+            openPermissionSettingDialog();
+        }
+    }
+
+    private void openPermissionSettingDialog() {
+        String message = "The Application needs some permission, please enable all permission required.";
+        AlertDialog alertDialog =
+                new AlertDialog.Builder(this)
+                        .setMessage(message)
+                        .setPositiveButton(getString(android.R.string.ok),
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent = new Intent();
+                                        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                        Uri uri = Uri.fromParts("package", getPackageName(), null);
+                                        intent.setData(uri);
+                                        startActivityForResult(intent, MANUALLY_CONTACTS_PERMISSION_REQUEST_CODE);
+                                        dialog.cancel();
+                                    }
+                                }).show();
+        alertDialog.setCanceledOnTouchOutside(true);
+    }
+
 
     private void tryLogin() {
+
+        boolean isGranted = checkPermission();
+
+        if (!isGranted) {
+            requestPermission();
+            return;
+        }
 
         if (main_EDT_num_of_contacts.getText().toString().isEmpty()) {
             Toast.makeText(MainActivity.this, "Please Enter Number Of Contacts", Toast.LENGTH_SHORT).show();
